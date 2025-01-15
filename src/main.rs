@@ -23,18 +23,33 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
 
-    use minigrep_util::search;
+    use minigrep_util::{ search, search_case_insensitive };
 
     #[test]
-    fn one_result() {
+    fn case_sensitive() {
         let query = "duct";
         let content = "\
 Rust:
 safe, fast, productive.
-Pick three.";
+Pick three.
+Duct tape.";
 
         assert_eq!(vec!["safe, fast, productive."], search(query, content));
+    }
+
+    #[test]
+    fn case_insensitive() {
+        let query = "RuSt";
+        let content = "\
+Rust:
+safe, fast, productive.
+Pick three.
+Trust me.";
+
+        assert_eq!(vec!["Rust:", "Trust me."], search_case_insensitive(query, content));
     }
 }
