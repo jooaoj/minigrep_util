@@ -18,10 +18,24 @@ impl Config {
     }   
 }
 
+pub fn search<'a>(query: &str, content: &'a str) -> Vec<&'a str> {
+    let mut result = Vec::new();
+
+    for line in content.lines() {
+        if line.contains(query) {
+            result.push(line);
+        } 
+    }
+
+    result
+}
+
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let content = fs::read_to_string(&config.path)?; // Instead of panicking with expect, return an error value
 
-    println!("With text:\n```\n{content}\n```");
+    for line in search(&config.query, &content) {
+        println!("{line}");
+    }
 
     Ok(())
 }
