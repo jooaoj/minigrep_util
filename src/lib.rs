@@ -1,4 +1,4 @@
-use std::{ error::Error, fs, env };
+use std::{ env::{self}, error::Error, fs };
 
 pub struct Config {
     pub query: String,
@@ -7,13 +7,19 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments");
-        }
+    // generic type with trait bounds "Iterator" and return String
+    pub fn build(mut args: impl Iterator<Item = String>,) -> Result<Config, &'static str> {
+        args.next(); // skip over the path of executable
 
-        let query = args[1].clone();
-        let path = args[2].clone();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string!"),
+        };
+
+        let path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a file path!"),
+        };
 
         let ignore_case = env::var("IGNORE_CASE").is_ok();
     
@@ -22,28 +28,13 @@ impl Config {
 }
 
 pub fn search<'a>(query: &str, content: &'a str) -> Vec<&'a str> {
-    let mut result = Vec::new();
-
-    for line in content.lines() {
-        if line.contains(query) {
-            result.push(line);
-        } 
-    }
-
-    result
+    content.lines().filter(| line | line.contains(query)).collect()
 }
 
 pub fn search_case_insensitive<'a>(query: &str, content: &'a str) -> Vec<&'a str> {
     let query = query.to_lowercase(); // not 100 % accurate with all Unicode!!
-    let mut result = Vec::new();
 
-    for line in content.lines() {
-        if line.to_lowercase().contains(&query) {
-            result.push(line);
-        } 
-    }
-
-    result
+    content.lines().filter(| line | line.to_lowercase().contains(&query)).collect()
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
